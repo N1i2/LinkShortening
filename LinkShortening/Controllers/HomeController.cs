@@ -1,4 +1,5 @@
 ﻿using LinkShortening.Data;
+using LinkShortening.Exceptions;
 using LinkShortening.Models;
 using LinkShortening.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -6,14 +7,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LinkShortening.Controllers
 {
-    public class HomeController(LinkShorteningDbContext context, UrlShorteningService urlShorteningService) : Controller
+    public class HomeController(LinkShorteningDbContext context, UrlShorteningService urlShorteningService, ILogger<HomeController> logger) : Controller
     {
         private readonly LinkShorteningDbContext _context = context;
         private readonly UrlShorteningService _urlShorteningService = urlShorteningService;
+        private readonly ILogger<HomeController> _logger = logger;
 
         public async Task<IActionResult> Index()
         {
             var urls = await _context.ShortUrls.ToListAsync();
+
             return View(urls);
         }
 
@@ -24,7 +27,7 @@ namespace LinkShortening.Controllers
 
             if (url == null)
             {
-                return NotFound();
+                throw new Exception("URL is cannot be empty");
             }
 
             url.ClickCount++;
@@ -34,6 +37,7 @@ namespace LinkShortening.Controllers
             return Redirect(url.OriginalUrl);
         }
 
+        [HttpGet] 
         public IActionResult Create()
         {
             return View();
@@ -41,24 +45,21 @@ namespace LinkShortening.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("OriginalUrl")] ShortUrl shortUrl)
+        public async Task<IActionResult> Create([FromForm] string OriginalUrl)
         {
             if (ModelState.IsValid)
             {
-                if (!Uri.TryCreate(shortUrl.OriginalUrl, UriKind.Absolute, out _))
-                {
-                    ModelState.AddModelError("OriginalUrl", "URL is invalid");
-                    return View(shortUrl);
-                }
+                var shortCode = _urlShorteningService.GenerateUniqueShortUrl(_context);
 
-                shortUrl.ShortCode = _urlShorteningService.GenerateUniqueShortUrl(_context);
-                _context.Add(shortUrl);
+                var shortUrl = ShortUrl.Create(OriginalUrl, shortCode);
+
+                _context.ShortUrls.Add(shortUrl);
                 await _context.SaveChangesAsync();
 
                 return RedirectToAction(nameof(Index));
             }
 
-            return View(shortUrl);
+            return View();
         }
 
         [HttpPost]

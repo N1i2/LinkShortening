@@ -45,5 +45,19 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
+    <partial name="_ValidationScriptsPartial" />
 </body>
 </html>
+
+<script>
+    function showError(message) {
+        document.getElementById('errorMessage').textContent = message;
+        var errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+        errorModal.show();
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <text>showError('@Html.Raw(TempData["ErrorMessage"])');</text>
+    }
+</script>

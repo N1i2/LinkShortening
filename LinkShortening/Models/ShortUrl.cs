@@ -1,4 +1,5 @@
 ﻿using LinkShortening.Exceptions;
+using LinkShortening.Exceptions.Factory;
 using LinkShortening.ValidationRules;
 using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
@@ -7,9 +8,9 @@ namespace LinkShortening.Models;
 
 public class ShortUrl : BaseModel
 {
-    public string OriginalUrl { get; init; }
+    public string OriginalUrl { get; set; }
     public string ShortCode { get; set; }
-    public DateTime CreateDate { get; init; }
+    public DateTime CreateDate { get; set; }
     public uint ClickCount { get; set; }
 
     private const uint StartClickCount = 0;
@@ -20,11 +21,11 @@ public class ShortUrl : BaseModel
     {
         if (string.IsNullOrWhiteSpace(originalUrl))
         {
-            throw new EmptyUrlException();
+            throw ExceptionFactory.CreateEmptyUrlException<ModelException>();
         }
         if(!Uri.IsWellFormedUriString(originalUrl, UriKind.Absolute))
         {
-            throw new InvalidUrlFormatException(originalUrl);
+            throw ExceptionFactory.CreateInvalidUrlFormatException<ModelException>(originalUrl);
         }
 
         if (string.IsNullOrWhiteSpace(shortCode))

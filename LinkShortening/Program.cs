@@ -36,5 +36,6 @@ app.Run();
 
 
 // TODO: Swagger (++)
+// TODO: create delete link(+)
 // TODO: create error and exception pages (+)
 // TODO: create seeder(+-)
